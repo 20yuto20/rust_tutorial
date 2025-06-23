@@ -1,7 +1,9 @@
 use std::io::stdin;
 
 fn main() {
-    let mut memories = vec![0.0; 10];
+    let mut memory = Memory {
+        slots: vec![],
+    };
     let mut prev_result: f64 = 0.0;
 
     for line in stdin().lines() {
@@ -17,14 +19,14 @@ fn main() {
         let is_memory = tokens[0].starts_with("mem");
         if is_memory && tokens[0].ends_with('+') {
             add_and_print_memory(
-                &mut memories,
+                &mut memory,
                 tokens[0],
                 prev_result,
             );
             continue;
         } else if is_memory && tokens[0].ends_with('-') {
             add_and_print_memory(
-                &mut memories,
+                &mut memory,
                 tokens[0],
                 -prev_result,
             );
@@ -32,10 +34,10 @@ fn main() {
         }
 
         // 式の計算
-        let left = eval_token(tokens[0], memory);
+        let left = eval_token(tokens[0], &memory);
 
-        let right = eval_token(tokens[2], memory);
-        
+        let right = eval_token(tokens[2], &memory);
+
         let result = eval_expression(left, right, tokens[1]);
 
         print_output(result);
@@ -44,10 +46,21 @@ fn main() {
     }
 }
 
-fn eval_token(token: &str, memory: Vec<f64>) -> f64 {
+struct Memory {
+    slots: Vec<String, f64>,
+}
+
+fn eval_token(token: &str, memory: &Memory) -> f64 {
     if token.starts_with("mem") {
-        let slot_index: usize = token[3..].parse().unwrap();
-        memories[slot_index]
+        let slot_index: usize = token[3..];
+        // すべてのメモリを探索する
+        for slot in &memory.slots {
+            if slot.0 == slot_name {
+                // メモリが見つかったので値を返す
+                return slot.1;
+            }
+        }
+        0.0
     } else {
         token.parse().unwrap()
     }
@@ -70,11 +83,22 @@ fn print_output(result: f64) {
 }
 
 fn add_and_print_memory(
-    memories: &mut Vec<f64>,
+    memory: &mut Memory,
     token: &str,
     prev_result: f64
 ) {
     let slot_index: usize = token[3..token.len() - 1].parse().unwrap();
-    memories[slot_index] += prev_result;
-    print_output(memories[slot_index]);
+    // メモリの探索
+    for slot in memory.slots.iter_mut() {
+        if slot.o == slot_name {
+            // メモリが見つかったので値を更新して終了
+            slot.1 += prev_result;
+            print_output(slot.1);
+            return;
+        }
+    }
+
+    // メモリが見つからなかったので新しいメモリを作成（最後の要素に追加する）
+    memory.slots.push((slot_name.to_string(), prev_result));
+    print_output(prev_result);
 }
