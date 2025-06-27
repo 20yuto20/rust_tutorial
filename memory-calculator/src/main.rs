@@ -1,9 +1,5 @@
-use std::io::stdin;u78
+use std::io::stdin;
 use std::collections::{hash_map::Entry, HashMap};
-
-struct Memory {
-    slots: HashMap<String, f64>,
-}
 
 fn main() {
     let mut memory = Memory::new();
@@ -22,18 +18,18 @@ fn main() {
         match &tokens[0] {
             Token::MemoryPlus(memory_name) => {
                 let memory_name = memory_name.to_string();
-                let result = memory.add(memory_name, prev_result);
+                let result = memory.add(&memory_name, prev_result);
                 print_output(result);
             }
             Token::MemoryMinus(memory_name) => {
                 let memory_name = memory_name.to_string();
-                let result = memory.add(memory_name, prev_result);
+                let result = memory.add(&memory_name, prev_result);
                 print_output(result);
             }
             _ => {
-                let left = Token::eval_token(tokens[0], &memory);
-                let right = Token::eval_token(tokens[2], &memory);
-                let result = Token::eval_expression(left, right, tokens[1]);
+                let left = Token::eval_token(&tokens[0], &memory);
+                let right = Token::eval_token(&tokens[2], &memory);
+                let result = Token::eval_expression(left, right, &tokens[1]);
                 print_output(result);
                 prev_result = result;
             }
@@ -56,7 +52,7 @@ impl Memory {
         slot_name: &str,
         prev_result: f64
     ) -> f64 {
-        match self.slots.entry(slot_name) {
+        match self.slots.entry(slot_name.to_string()) {
             Entry::Occupied(mut entry) => {
                 // メモリが見つかったので値を更新して終了
                 *entry.get_mut() += prev_result;
@@ -92,8 +88,8 @@ impl Token {
             "+" => Self::Plus,
             "-" => Self::Minus,
             "*" => Self::Asterisk,
-            "/" => Self::Slash
-            _ if value.starts_with("mem" => {
+            "/" => Self::Slash,
+            _ if value.starts_with("mem") => {
                 let mut memory_name = value[3..].to_string();
                 if value.ends_with('+') {
                     memory_name.pop();
@@ -112,7 +108,7 @@ impl Token {
     fn split(text: &str) -> Vec<Self> {
         text.split(char::is_whitespace)
             .map(Self::parse)
-            .collect();
+            .collect()
     }
 
     fn eval_token(token: &Token, memory: &Memory) -> f64 {
